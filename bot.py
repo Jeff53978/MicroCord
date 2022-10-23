@@ -2,6 +2,8 @@ import microcord
 
 client = microcord.Client(open(".token", "r").read())
 
-@client.event("ready")
+@client.event
 async def ready():
-    pass
+    print("Ready!")
+
+client.run()
