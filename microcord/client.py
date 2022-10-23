@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from functools import wraps
 
 from .user import User
+from .message import Message
 
 class GatewayMessage:
     def __init__(self, data: str):
@@ -37,6 +38,8 @@ class Client:
     def event(self, event: str = None):
         def decorator(function):
             if event == "READY": self.ready = function
+            if event == "GUILD_CREATE": self.guild_create = function
+            if event == "MESSAGE_CREATE": self.message_create = function
             def wrapper(*args, **kwargs):
                 return function(*args, **kwargs)
             return wrapper
@@ -52,6 +55,10 @@ class Client:
                     if msg.event == "READY" and self.ready:
                         self.user = User(self.token, SimpleNamespace(**msg.data.user))
                         self.ready()
+
+                    if msg.event == "MESSAGE_CREATE" and self.message_create:
+                        self.message_create(Message(self.token, msg.data))
+
             except websocket._exceptions.WebSocketConnectionClosedException:
                 print("Socket closed")
                 exit()
