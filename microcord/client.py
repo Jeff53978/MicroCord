@@ -28,19 +28,28 @@ class Client:
         self.token = token
         self.connected = False
 
+        self.ready = None
+        self.guild_create = None
+        self.message_create = None
+
     def event(self, event: str = None):
         threading.Thread(target=self.event_handler, args=(event,)).start()
 
     def event_handler(self, event: str = None):
-        while self.connected:
+        while not self.connected:
+            pass
+
+        while True:
             try:
                 msg = GatewayMessage(self.ws.recv())
                 if msg.op == 11:
                     print("Heartbeat acknowledged!")
                 else: 
-                    print(msg.event)
+                    if msg.event == "READY" and self.ready:
+                        self.ready()
             except websocket._exceptions.WebSocketConnectionClosedException:
                 print("Socket closed")
+                input()
 
     def connection_handler(self):
         print("Starting connection handler...")
@@ -60,6 +69,7 @@ class Client:
             "op": 2,
             "d": {
                 "token": self.token,
+                "intents": 3243773,
                 "properties": {
                     "$os": "linux",
                     "$browser": "microcord",
@@ -73,5 +83,5 @@ class Client:
         self.ws = websocket.create_connection("wss://gateway.discord.gg/?v=6&encoding=json")
         self.interval = GatewayMessage(self.ws.recv()).data.heartbeat_interval / 1000
         self.connected = True
-        threading.Thread(target=self.connection_handler).start()
         threading.Thread(target=self.authentication_handler).start()
+        threading.Thread(target=self.connection_handler).start()
