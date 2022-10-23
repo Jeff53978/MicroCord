@@ -33,12 +33,15 @@ class Client:
 
     async def event_handler(self, event: str = None):
         while True:
-            msg = GatewayMessage(self.ws.recv())
-            if msg.op == 11:
-                print("Heartbeat acknowledged!")
-            else: 
-                print(msg.event)
-            await asyncio.sleep(0.1)
+            try:
+                msg = GatewayMessage(self.ws.recv())
+                if msg.op == 11:
+                    print("Heartbeat acknowledged!")
+                else: 
+                    print(msg.event)
+                await asyncio.sleep(1)
+            except websocket._exceptions.WebSocketConnectionClosedException:
+                print("Socket closed")
 
     async def connection_handler(self):
         print("Starting connection handler...")
