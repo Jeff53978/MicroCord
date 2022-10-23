@@ -10,4 +10,4 @@ def test_function():
 def test_function2(msg):
     print(f"[ {msg.author.username} ] {msg.content}")
 
-client.run()
+client.run(intents=3243773)

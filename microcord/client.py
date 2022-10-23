@@ -76,7 +76,7 @@ class Client:
             "op": 2,
             "d": {
                 "token": self.token,
-                "intents": 3243773,
+                "intents": self.intents,
                 "properties": {
                     "$os": "linux",
                     "$browser": "microcord",
@@ -85,7 +85,8 @@ class Client:
             }
         }))
 
-    def run(self):
+    def run(self, intents: int = 3243773):
+        self.intents = intents
         self.ws = websocket.create_connection("wss://gateway.discord.gg/?v=6&encoding=json")
         self.interval = GatewayMessage(self.ws.recv()).data.heartbeat_interval / 1000
         threading.Thread(target=self.authentication_handler).start()
