@@ -1,7 +1,7 @@
-from code import interact
 import websocket
-import asyncio
+import threading
 import json
+import time
 
 from types import SimpleNamespace
 
@@ -25,25 +25,24 @@ class GatewayMessage():
 
 class Client:
     def __init__(self, token):
-        self.loop = asyncio.get_event_loop()
         self.token = token
+        self.connected = False
 
     def event(self, event: str = None):
-        self.loop.create_task(self.event_handler(event))
+        threading.Thread(target=self.event_handler, args=(event,)).start()
 
-    async def event_handler(self, event: str = None):
-        while True:
+    def event_handler(self, event: str = None):
+        while self.connected:
             try:
                 msg = GatewayMessage(self.ws.recv())
                 if msg.op == 11:
                     print("Heartbeat acknowledged!")
                 else: 
                     print(msg.event)
-                await asyncio.sleep(1)
             except websocket._exceptions.WebSocketConnectionClosedException:
                 print("Socket closed")
 
-    async def connection_handler(self):
+    def connection_handler(self):
         print("Starting connection handler...")
         while self.interval:
             self.ws.send(json.dumps({
@@ -51,7 +50,7 @@ class Client:
                 "d": None
             }))
             print("Heartbeat sent!")
-            await asyncio.sleep(self.interval)
+            time.sleep(self.interval)
         else:
             print("Heartbeat interval is 0, stopping heartbeat.")
 
@@ -73,5 +72,6 @@ class Client:
     def run(self):
         self.ws = websocket.create_connection("wss://gateway.discord.gg/?v=6&encoding=json")
         self.interval = GatewayMessage(self.ws.recv()).data.heartbeat_interval / 1000
-        self.authentication_handler()
-        self.loop.run_until_complete(self.connection_handler())
+        self.connected = True
+        threading.Thread(target=self.connection_handler).start()
+        threading.Thread(target=self.authentication_handler).start()
