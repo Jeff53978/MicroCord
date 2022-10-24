@@ -1,5 +1,6 @@
 import websocket
 import threading
+import requests
 import json
 import time
 
@@ -8,6 +9,7 @@ from functools import wraps
 
 from .user import User
 from .message import Message
+from .interaction import Interaction
 
 class GatewayMessage:
     def __init__(self, data: str):
@@ -30,10 +32,35 @@ class GatewayMessage:
 class Client:
     def __init__(self, token):
         self.token = token
-
+        self.commands = []
+        self.session = requests.Session()
+        self.session.headers.update({
+            "Authorization": f"Bot {self.token}"
+        })
+        self.id = self.session.get("https://discord.com/api/users/@me").json()["id"]
         self.ready = None
         self.guild_create = None
         self.message_create = None
+
+    def command(self, name: str = None, description: str = None, json: dict = None, guild_id: int = None):
+        def decorator(function):
+            if name and description:
+                payload = {
+                    "name": name,
+                    "type": 1,
+                    "description": description,
+                }
+            if json:
+                payload = json
+            if guild_id:
+                self.session.post(f"https://discord.com/api/applications/{self.id}/guilds/{guild_id}/commands", json=payload)
+            else:
+                self.session.post(f"https://discord.com/api/applications/{self.id}/commands", json=payload)
+            self.commands.append({"name": name, "function": function})
+            def wrapper(*args, **kwargs):
+                return function(*args, **kwargs)
+            return wrapper
+        return decorator
 
     def event(self, event: str = None):
         def decorator(function):
@@ -45,7 +72,7 @@ class Client:
             return wrapper
         return decorator
 
-    def event_handler(self, event: str = None):
+    def event_handler(self):
         while True:
             try:
                 msg = GatewayMessage(self.ws.recv())
@@ -58,6 +85,11 @@ class Client:
 
                     if msg.event == "MESSAGE_CREATE" and self.message_create:
                         self.message_create(Message(self.token, msg.data))
+
+                    if msg.event == "INTERACTION_CREATE":
+                        for command in self.commands:
+                            if command["name"] == msg.data.data["name"]:
+                                command["function"](Interaction(msg.data))
 
             except websocket._exceptions.WebSocketConnectionClosedException:
                 print("Socket closed")
