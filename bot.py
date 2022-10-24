@@ -12,6 +12,7 @@ def test_function2(msg):
 
 @client.command(name="ping", description="Pings the bot", guild_id=int(open(".guild_id", "r").read()))
 def ping_command(msg):
+    print(f"[ {msg.author.username} ] /ping")
     msg.reply("Pong!")
 
 client.run(intents=3243773)
