@@ -1,12 +1,14 @@
 import microcord
 
+from microcord.events import ready, message_create
+
 client = microcord.Client(open(".token", "r").read())
 
-@client.event("READY")
+@client.event(ready)
 def on_ready():
     print(f"[ INFO ] Logged in as {client.user.username}#{client.user.discriminator}")
 
-@client.event("MESSAGE_CREATE")
+@client.event(message_create)
 def on_message(msg):
     print(f"[ {msg.author.username} ] {msg.content}")
 
