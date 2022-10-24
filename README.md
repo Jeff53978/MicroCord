@@ -18,7 +18,7 @@ def on_ready():
 def on_message(msg):
     print(f"[ {msg.author.username} ] {msg.content}")
 
-@client.command(name="ping", description="Pings the bot", guild_id=int(open(".guild_id", "r").read()))
+@client.command(name="ping", description="Pings the bot", guild_id=int(GUILD ID HERE))
 def ping_command(msg):
     print(f"[ {msg.author.username} ] /ping")
     embed = microcord.Embed("Pong!", "This bot is running", 0xfafafa)
