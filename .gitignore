@@ -5,6 +5,7 @@ __pycache__/
 
 # Config files
 .token
+.guild_id
 
 # C extensions
 *.so
