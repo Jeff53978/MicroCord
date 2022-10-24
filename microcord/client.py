@@ -81,15 +81,15 @@ class Client:
                 else: 
                     if msg.event == "READY" and self.ready:
                         self.user = User(self.token, SimpleNamespace(**msg.data.user))
-                        self.ready()
+                        threading.Thread(target=self.ready).start()
 
                     if msg.event == "MESSAGE_CREATE" and self.message_create:
-                        self.message_create(Message(self.token, msg.data))
+                        threading.Thread(target=self.message_create, args=(Message(self.token, msg.data),)).start()
 
                     if msg.event == "INTERACTION_CREATE":
                         for command in self.commands:
                             if command["name"] == msg.data.data["name"]:
-                                command["function"](Interaction(msg.data))
+                                threading.Thread(target=command["function"], args=(Interaction(msg.data),)).start()
 
             except websocket._exceptions.WebSocketConnectionClosedException:
                 print("Socket closed")
