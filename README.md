@@ -1,6 +1,5 @@
 # MicroCord
-Microcord is an minimal Discord library with slash commands, made for simple bots
-
+Microcord is an ultra fast minimal Discord library with slash commands and message events
 # Example
 
 ```py
