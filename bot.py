@@ -2,7 +2,7 @@ import microcord
 
 from microcord.events import ready, message_create
 
-client = microcord.Client("asdasdasd")
+client = microcord.Client(open(".token", "r").read())
 
 @client.event(ready)
 def on_ready():
