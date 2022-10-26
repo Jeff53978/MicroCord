@@ -37,7 +37,12 @@ class Client:
         self.session.headers.update({
             "Authorization": f"Bot {self.token}"
         })
-        self.id = self.session.get("https://discord.com/api/users/@me").json()["id"]
+        x = self.session.get("https://discord.com/api/users/@me")
+        if x.status_code == 401:
+           print("[ Error ] Token invalid")
+           exit()
+        else:
+            self.id = x.json()["id"]
         self.ready = None
         self.guild_create = None
         self.message_create = None
