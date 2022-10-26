@@ -1,3 +1,3 @@
 class Intents:
-    def all(self):
+    def all():
         return 3243773
