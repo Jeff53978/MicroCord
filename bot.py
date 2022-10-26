@@ -2,7 +2,7 @@ import microcord
 
 from microcord.events import ready, message_create
 
-client = microcord.Client(open(".token", "r").read())
+client = microcord.Client("asdasdasd")
 
 @client.event(ready)
 def on_ready():
@@ -18,4 +18,4 @@ def ping_command(msg):
     embed = microcord.Embed("Pong!", "This bot is running", 0xfafafa)
     msg.reply(embed=embed)
 
-client.run(intents=3243773)
+client.run(microcord.Intents.all())
