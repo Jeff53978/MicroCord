@@ -30,6 +30,10 @@ class Client:
         self.guild_create = None
         self.message_create = None
         self.guild_create = None
+        self.session_id = None
+        self.resume_gateway_url = None
+        self.user = None
+        self.guilds = None
 
     def command(self, name: str = None, description: str = None, json: dict = None, guild_id: int = None):
         def decorator(function):
@@ -70,13 +74,14 @@ class Client:
                     pass
 
                 elif i.t == "READY" and self.ready:
-                    self.ready(User(self.token, i.d.user))
+                    self.session_id = i.d.session_id
+                    self.resume_gateway_url = i.d.resume_gateway_url
+                    self.user = User(self.token, i.d.user)
+                    self.guilds = [Guild(self.token, x) for x in DefaultMunch.fromDict(self.session.get("https://discord.com/api/users/@me/guilds").json())]
+                    self.ready()
 
                 elif i.t == "MESSAGE_CREATE" and self.message_create:
                     self.message_create(Message(self.token, i.d))
-
-                elif i.t == "GUILD_CREATE" and self.guild_create:
-                    self.guild_create(Guild(self.token, i.d))
 
                 else:
                     print(i.t)
