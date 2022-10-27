@@ -46,9 +46,15 @@ class Client:
             if json:
                 payload = json
             if guild_id:
-                self.session.post(f"https://discord.com/api/applications/{self.id}/guilds/{guild_id}/commands", json=payload)
+                x = self.session.post(f"https://discord.com/api/applications/{self.id}/guilds/{guild_id}/commands", json=payload)
+                if x.status_code == 403:
+                    print(f"[ Error ] Missing slash command access")
+                    exit()
             else:
-                self.session.post(f"https://discord.com/api/applications/{self.id}/commands", json=payload)
+                x = self.session.post(f"https://discord.com/api/applications/{self.id}/commands", json=payload)
+                if x.status_code == 403:
+                    print(f"[ Error ] Missing slash command access")
+                    exit()
             self.commands.append({"name": name, "function": function})
             def wrapper(*args, **kwargs):
                 return function(*args, **kwargs)
