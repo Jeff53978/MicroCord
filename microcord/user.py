@@ -10,3 +10,6 @@ class User:
         except: self.verified = None
         try: self.bot = data.bot
         except: self.bot = None
+
+    def __repr__(self):
+        return f"MicroCord.User(username={self.username}, id={self.id}, discriminator={self.discriminator}, avatar={self.avatar}, verified={self.verified}, bot={self.bot})"

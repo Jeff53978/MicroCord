@@ -4,30 +4,13 @@ import requests
 import json
 import time
 
-from types import SimpleNamespace
+from munch import DefaultMunch
 from functools import wraps
 
 from .user import User
 from .message import Message
 from .interaction import Interaction
-
-class GatewayMessage:
-    def __init__(self, data: str):
-        try:
-            data = json.loads(data)
-            self.op = data["op"]
-            if data["d"]:
-                self.data = SimpleNamespace(**data["d"])
-            else:
-                self.data = None
-            if "t" in data:
-                self.event = data["t"]
-            else:
-                self.event = None
-        except:
-            self.op = None
-            self.data = None
-            self.event = None
+from .guild import Guild
 
 class Client:
     def __init__(self, token):
@@ -43,9 +26,10 @@ class Client:
            exit()
         else:
             self.id = x.json()["id"]
-        self.ready = None
+        self.ready = False
         self.guild_create = None
         self.message_create = None
+        self.guild_create = None
 
     def command(self, name: str = None, description: str = None, json: dict = None, guild_id: int = None):
         def decorator(function):
@@ -80,24 +64,26 @@ class Client:
     def event_handler(self):
         while True:
             try:
-                msg = GatewayMessage(self.ws.recv())
-                if msg.op == 11:
+                data = json.loads(self.ws.recv())
+                i = DefaultMunch.fromDict(data)
+                if i.op == 11:
                     pass
-                else: 
-                    if msg.event == "READY" and self.ready:
-                        self.user = User(self.token, SimpleNamespace(**msg.data.user))
-                        threading.Thread(target=self.ready).start()
 
-                    if msg.event == "MESSAGE_CREATE" and self.message_create:
-                        threading.Thread(target=self.message_create, args=(Message(self.token, msg.data),)).start()
+                elif i.t == "READY" and self.ready:
+                    self.ready(User(self.token, i.d.user))
 
-                    if msg.event == "INTERACTION_CREATE":
-                        for command in self.commands:
-                            if command["name"] == msg.data.data["name"]:
-                                threading.Thread(target=command["function"], args=(Interaction(msg.data),)).start()
+                elif i.t == "MESSAGE_CREATE" and self.message_create:
+                    self.message_create(Message(self.token, i.d))
 
-            except websocket._exceptions.WebSocketConnectionClosedException:
-                print("Socket closed")
+                elif i.t == "GUILD_CREATE" and self.guild_create:
+                    self.guild_create(Guild(self.token, i.d))
+
+                else:
+                    print(i.t)
+                    
+            except Exception as e:
+                print(e)
+                print("[ Error ] Socket closed")
                 exit()
 
     def connection_handler(self):
@@ -125,7 +111,7 @@ class Client:
     def run(self, intents: int = 3243773):
         self.intents = intents
         self.ws = websocket.create_connection("wss://gateway.discord.gg/?v=6&encoding=json")
-        self.interval = GatewayMessage(self.ws.recv()).data.heartbeat_interval / 1000
+        self.interval = json.loads(self.ws.recv())["d"]["heartbeat_interval"] / 1000
         threading.Thread(target=self.authentication_handler).start()
         threading.Thread(target=self.connection_handler).start()
         threading.Thread(target=self.event_handler).start()
